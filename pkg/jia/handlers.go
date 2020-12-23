@@ -148,7 +148,7 @@ func HandleLeaderboardSlashCommand(w http.ResponseWriter, r *http.Request) {
 
 	resp, _ := json.Marshal(map[string]interface{}{
 		"blocks":        blocks,
-		"response_type": "in_channel",
+		"response_type": "ephemeral",
 	})
 
 	w.Header().Add("Content-Type", "application/json")
