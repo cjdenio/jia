@@ -36,7 +36,7 @@ func StartServer(config *Config) {
 	// Start receiving events
 	http.HandleFunc("/slack/events", handleSlackEvents)
 	http.HandleFunc("/slack/leaderboard", HandleLeaderboardSlashCommand)
-	http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", config.Port), nil)
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", config.Port), nil)
 }
 
 func handleSlackEvents(w http.ResponseWriter, r *http.Request) {
