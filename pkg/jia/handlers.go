@@ -82,6 +82,7 @@ func onMessage(slackClient *slack.Client, event *slackevents.MessageEvent) {
 
 	// Finally!
 	redisClient.Set("last_valid_number", matchedNumber, 0)
+	redisClient.Set("last_valid_ts", event.TimeStamp, 0)
 	redisClient.Set("last_sender_id", event.User, 0)
 
 	// Get the current month/year in UTC
@@ -142,8 +143,17 @@ func HandleLeaderboardSlashCommand(w http.ResponseWriter, r *http.Request) {
 		),
 	}
 
-	for _, v := range entries {
-		blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("<@%s> has counted *%d* this month", v.User, v.Number), false, false), nil, nil))
+	for i, v := range entries {
+		emoji := ""
+		if i == 0 {
+			emoji = ":first_place_medal:"
+		} else if i == 1 {
+			emoji = ":second_place_medal:"
+		} else if i == 2 {
+			emoji = ":third_place_medal:"
+		}
+
+		blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s <@%s> has counted *%d* this month", emoji, v.User, v.Number), false, false), nil, nil))
 	}
 
 	resp, _ := json.Marshal(map[string]interface{}{
