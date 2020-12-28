@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"sort"
 	"strconv"
 	"time"
 
@@ -100,40 +99,11 @@ func HandleLeaderboardSlashCommand(w http.ResponseWriter, r *http.Request) {
 	year := now.Year()
 	month := now.Month()
 
-	scan := redisClient.Scan(0, fmt.Sprintf("leaderboard:%d-%d:*", year, month), 10)
-	if scan.Err() != nil {
-		w.Write([]byte("Something went wrong while loading the leaderboard :cry: Please try again later!"))
+	entries, err := getLeaderboardEntries(month, year)
+	if err != nil {
+		w.Write(nil)
 		return
 	}
-
-	scanIterator := scan.Iterator()
-
-	type Entry struct {
-		Number int
-		User   string
-	}
-
-	entries := []Entry{}
-
-	for scanIterator.Next() {
-		entry := redisClient.Get(scanIterator.Val())
-		entryInt, err := entry.Int()
-		if err != nil {
-			return
-		}
-
-		if user, ok := parseLeaderboardEntry(scanIterator.Val()); ok {
-			entries = append(entries, Entry{
-				Number: entryInt,
-				User:   user,
-			})
-		}
-	}
-
-	// Sort entries
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Number > entries[j].Number
-	})
 
 	blocks := []slack.Block{
 		slack.NewSectionBlock(
