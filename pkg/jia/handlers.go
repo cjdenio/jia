@@ -135,6 +135,10 @@ func HandleLeaderboardSlashCommand(w http.ResponseWriter, r *http.Request) {
 		return entries[i].Number > entries[j].Number
 	})
 
+	if len(entries) > 10 {
+		entries = entries[:10]
+	}
+
 	blocks := []slack.Block{
 		slack.NewSectionBlock(
 			slack.NewTextBlockObject("mrkdwn", fmt.Sprintf(":chart_with_upwards_trend: Counting stats for *%s %d*:", month.String(), year), false, false),
