@@ -41,6 +41,8 @@ func onMessage(slackClient *slack.Client, event *slackevents.MessageEvent) {
 		return
 	}
 
+	log.Printf("Got number: %d", matchedNumber)
+
 	// Reject if sender also sent the previous number.
 	lastSenderID, err := redisClient.Get("last_sender_id").Result()
 	if err != nil {
