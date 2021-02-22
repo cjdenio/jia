@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"strings"
 
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
@@ -23,7 +24,7 @@ func HandleInnerEvent(slackClient *slack.Client, innerEvent *slackevents.EventsA
 
 func onMessage(slackClient *slack.Client, event *slackevents.MessageEvent) {
 	// Ignore messages that aren't in the target channel, or are non-user messages.
-	if event.Channel != jiaConfig.ChannelID || event.User == "USLACKBOT" || event.User == "" {
+	if event.Channel != jiaConfig.ChannelID || event.User == "USLACKBOT" || event.User == "" || strings.HasPrefix(event.Text, "#") {
 		return
 	}
 
