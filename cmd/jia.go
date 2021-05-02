@@ -16,6 +16,6 @@ func main() {
 	config := jia.NewConfig()
 
 	// Start receiving messages
-	fmt.Println(fmt.Sprintf("Listening on port %d", config.Port))
+	fmt.Printf("Listening on port %d\n", config.Port)
 	jia.StartServer(config)
 }

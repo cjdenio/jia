@@ -94,6 +94,11 @@ func onMessage(slackClient *slack.Client, event *slackevents.MessageEvent) {
 
 	// Increment the person's monthly count
 	redisClient.Incr(fmt.Sprintf("leaderboard:%d-%d:%s", year, month, event.User))
+
+	// Increment the person's count for any running events
+	for _, counting_event := range jiaConfig.GetRunningEvents() {
+		redisClient.Incr(fmt.Sprintf("event:%s:%s", counting_event.Name, event.User))
+	}
 }
 
 func HandleLeaderboardSlashCommand(w http.ResponseWriter, r *http.Request) {
@@ -171,6 +176,76 @@ func HandleLeaderboardSlashCommand(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp)
 }
 
+func HandleEventsSlashCommand(w http.ResponseWriter, r *http.Request) {
+	events := jiaConfig.GetRunningEvents()
+
+	var blocks []slack.Block
+
+	if len(events) == 0 {
+		blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", "There aren't any counting events running right now.", false, false), nil, nil))
+	} else if len(events) == 1 {
+		blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", fmt.Sprintf(":calendar: Counting stats for event *%s*:", events[0].Name), false, false), nil, nil))
+
+		scan := redisClient.Scan(0, fmt.Sprintf("event:%s:*", events[0].Name), 10)
+		scanIterator := scan.Iterator()
+
+		type Entry struct {
+			Number int
+			User   string
+		}
+
+		entries := []Entry{}
+
+		for scanIterator.Next() {
+			entry := redisClient.Get(scanIterator.Val())
+			entryInt, err := entry.Int()
+			if err != nil {
+				return
+			}
+
+			if _, user, ok := parseEventEntry(scanIterator.Val()); ok {
+				entries = append(entries, Entry{
+					Number: entryInt,
+					User:   user,
+				})
+			}
+		}
+
+		// Sort entries
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].Number > entries[j].Number
+		})
+
+		for i, v := range entries {
+			emoji := ""
+			if i == 0 {
+				emoji = ":first_place_medal:"
+			} else if i == 1 {
+				emoji = ":second_place_medal:"
+			} else if i == 2 {
+				emoji = ":third_place_medal:"
+			}
+
+			blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s <@%s> has counted *%d* so far", emoji, v.User, v.Number), false, false), nil, nil))
+		}
+
+		if len(entries) > 10 {
+			entries = entries[:10]
+		}
+		blocks = append(blocks, slack.NewContextBlock("", slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("Event will end at *<!date^%d^{time} on {date}|some date>*, your time", events[0].EndTime.Unix()), false, false)))
+	} else {
+		blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", "Something went wrong fetching the events leaderboard :cry:", false, false), nil, nil))
+	}
+
+	resp, _ := json.Marshal(map[string]interface{}{
+		"blocks":        blocks,
+		"response_type": "ephemeral",
+	})
+
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(resp)
+}
+
 func parseLeaderboardEntry(key string) (string, bool) {
 	re := regexp.MustCompile(`leaderboard:\d+-\d+:(\w+)`)
 
@@ -179,4 +254,20 @@ func parseLeaderboardEntry(key string) (string, bool) {
 		return "", false
 	}
 	return match[1], true
+}
+
+func parseEventEntry(key string) (event_name string, user_id string, ok bool) {
+	re := regexp.MustCompile(`event:(.+):(\w+)`)
+
+	match := re.FindStringSubmatch(key)
+	if match == nil {
+		ok = false
+		return
+	}
+
+	ok = true
+	event_name = match[1]
+	user_id = match[2]
+
+	return
 }
