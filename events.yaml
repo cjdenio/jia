@@ -1,6 +1,6 @@
 - name: Test Event
-  start: 8:00 May 2, 2021 EDT
-  end: 7:59 May 3, 2021 EDT
+  start: 8:00 May 2, 2021 -0400
+  end: 7:59 May 3, 2021 -0400
 - name: May Counting
-  start: 8:00 May 3, 2021 EDT
-  end: 20:00 May 31, 2021 EDT
+  start: 8:00 May 3, 2021 -0400
+  end: 20:00 May 31, 2021 -0400
