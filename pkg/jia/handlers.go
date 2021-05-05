@@ -216,6 +216,10 @@ func HandleEventsSlashCommand(w http.ResponseWriter, r *http.Request) {
 			return entries[i].Number > entries[j].Number
 		})
 
+		if len(entries) > 10 {
+			entries = entries[:10]
+		}
+
 		for i, v := range entries {
 			emoji := ""
 			if i == 0 {
@@ -229,9 +233,6 @@ func HandleEventsSlashCommand(w http.ResponseWriter, r *http.Request) {
 			blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s <@%s> has counted *%d* so far", emoji, v.User, v.Number), false, false), nil, nil))
 		}
 
-		if len(entries) > 10 {
-			entries = entries[:10]
-		}
 		blocks = append(blocks, slack.NewContextBlock("", slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("Event will end at *<!date^%d^{time} on {date}|some date>*, your time", events[0].EndTime.Unix()), false, false)))
 	} else {
 		blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", "Something went wrong fetching the events leaderboard :cry:", false, false), nil, nil))
