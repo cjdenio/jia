@@ -53,8 +53,8 @@ func NewConfig() *Config {
 	}
 
 	for i, event := range events {
-		events[i].StartTime, _ = time.Parse("15:04 Jan 2, 2006 -0700", event.StartString)
-		events[i].EndTime, _ = time.Parse("15:04 Jan 2, 2006 -0700", event.EndString)
+		events[i].StartTime, _ = time.Parse("15:04 January 2, 2006 -0700", event.StartString)
+		events[i].EndTime, _ = time.Parse("15:04 January 2, 2006 -0700", event.EndString)
 	}
 
 	return &Config{
