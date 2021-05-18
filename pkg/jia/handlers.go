@@ -73,12 +73,19 @@ func onMessage(slackClient *slack.Client, event *slackevents.MessageEvent) {
 
 	// Ignore numbers that aren't in order.
 	if matchedNumber != lastValidNumber+1 {
-		slackClient.AddReaction("bangbang", slack.ItemRef{
+		err = slackClient.AddReaction("bangbang", slack.ItemRef{
 			Channel:   event.Channel,
 			Timestamp: event.TimeStamp,
 		})
-		slackClient.PostEphemeral(event.Channel, event.User, slack.MsgOptionText(
+		if err != nil {
+			log.Println(err)
+		}
+
+		_, err = slackClient.PostEphemeral(event.Channel, event.User, slack.MsgOptionText(
 			fmt.Sprintf("You counted incorrectly! The next valid number is supposed to be *%d*.", lastValidNumber+1), false))
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
