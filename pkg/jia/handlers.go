@@ -235,12 +235,14 @@ func HandleEventsSlashCommand(w http.ResponseWriter, r *http.Request) {
 				emoji = ":second_place_medal:"
 			} else if i == 2 {
 				emoji = ":third_place_medal:"
+			} else {
+				emoji = fmt.Sprintf("%d:", i+1)
 			}
 
 			blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("%s <@%s> has counted *%d* so far", emoji, v.User, v.Number), false, false), nil, nil))
 		}
 
-		blocks = append(blocks, slack.NewContextBlock("", slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("Event will end at *<!date^%d^{time} on {date}|some date>*, your time", events[0].EndTime.Unix()), false, false)))
+		blocks = append(blocks, slack.NewContextBlock("", slack.NewTextBlockObject("mrkdwn", fmt.Sprintf("Event ends at *<!date^%d^{time} on {date}|some date>*, your time", events[0].EndTime.Unix()), false, false)))
 	} else {
 		blocks = append(blocks, slack.NewSectionBlock(slack.NewTextBlockObject("mrkdwn", "Something went wrong fetching the events leaderboard :cry:", false, false), nil, nil))
 	}
